@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine;
 using TMPro;
 using System;
+using System.Linq;
 
 [System.Serializable]
 public class RoomInfo
@@ -14,7 +15,7 @@ public class RoomInfo
     int turnStatus;
     int playerLimit;
     List<playerData> parts = new List<playerData>();
-    List<leads> ls = new List<leads>();
+    List<Leads> leads = new List<Leads>();
 
 }
 [System.Serializable]
@@ -24,13 +25,13 @@ public class playerData
     bool madness;
 }
 [System.Serializable]
-public class leads
+public class Leads
 {
-    public int cardDataIndex;
+    public int CardDataIndex;
     public  bool isFront;
 }
 [System.Serializable]
-public class cardData
+public class CardData
     {
     public int attribute;
     public int villagerId;
@@ -40,8 +41,8 @@ public class main : MonoBehaviour
     public TextMeshProUGUI Timer_Text;
     public GameObject Field;
     RoomInfo roominfo;
-    List<leads> ls = new List<leads>();
-    List<cardData> cD = new List<cardData>();
+    List<Leads> leads = new List<Leads>();
+    List<CardData> carddata = new List<CardData>();
     List<int> Selected_Card = new List<int>();
     //Selected_Cardはターンごとに-1で初期化
     int select_tmp=-1;
@@ -141,47 +142,54 @@ public class main : MonoBehaviour
             
         }
     }
-    void generate_leads()
+    void generate_Leads()
     {
         List<int> cardnum_tmp = new List<int>();
-        cardData cd_tmp = new cardData();
+        CardData carddata_tmp = new CardData();
         for (int i = 0; i < 8; i++)
         {
-            //cardDataListのインスタンス生成
+            Leads leads_tmp = new Leads();
+            //CardDataListのインスタンス生成
             if (i < 5)
             {
-                cd_tmp.attribute = 0;
-                cd_tmp.villagerId = i;
-                cardnum_tmp.Add(0);
+                carddata_tmp.attribute = 0;
+                carddata_tmp.villagerId = i;
+                leads_tmp.CardDataIndex = i;
+                leads_tmp.isFront = false;
+                leads.Add(leads_tmp);
+                leads.Add(leads_tmp);
+
             }
-            if (i < 8)
+            else if (i < 8)
             {
                 //この辺は村人の人数によって決まる。
-                cd_tmp.attribute = i-4+1;
-                cardnum_tmp.Add(i - 4 + 1);
-                cd_tmp.villagerId = -1;
+                carddata_tmp.attribute = i-4+1;
+                leads_tmp.CardDataIndex = i;
+                leads_tmp.isFront = false;
+                leads.Add(leads_tmp);
+                leads.Add(leads_tmp);
+                carddata_tmp.villagerId = -1;
             }
-            cD.Add(cd_tmp);
+            carddata.Add(carddata_tmp);
+            //Debug.Log(i);
         }
-        int loop = 0;
-        leads ls_add = new leads();
-        for (int i = 0; i < cardnum_tmp.Count; i++)
+        leads = leads.OrderBy(i => Guid.NewGuid()).ToList();
+        for (int i = 0; i < leads.Count; i++)
         {
-
+            Debug.Log("num i :" + i + "  leads" + leads[i].CardDataIndex);
         }
-        
-            
-        
-        Debug.Log("loop" + loop);
+
+
+
 
 
 
     }
         void Start()
     {
-        generate_leads();
+        generate_Leads();
         
-        Debug.Log("ls : " + ls.Count + "cD : " + cD.Count);
+        Debug.Log("leads : " + leads.Count + "carddata : " + carddata.Count);
     }
 
     void Timer()
