@@ -143,6 +143,7 @@ public class main : MonoBehaviour
     }
     void generate_leads()
     {
+        List<int> cardnum_tmp = new List<int>();
         cardData cd_tmp = new cardData();
         for (int i = 0; i < 8; i++)
         {
@@ -151,56 +152,36 @@ public class main : MonoBehaviour
             {
                 cd_tmp.attribute = 0;
                 cd_tmp.villagerId = i;
+                cardnum_tmp.Add(0);
             }
             if (i < 8)
             {
                 //この辺は村人の人数によって決まる。
                 cd_tmp.attribute = i-4+1;
+                cardnum_tmp.Add(i - 4 + 1);
                 cd_tmp.villagerId = -1;
             }
             cD.Add(cd_tmp);
         }
+        int loop = 0;
         leads ls_add = new leads();
-        int tmp_count = 0;
-        int card_tmp = 0;
-        for (int i = 0; i < cD.Count*2; i++)
+        for (int i = 0; i < cardnum_tmp.Count; i++)
         {
-            card_tmp = Convert.ToInt32((UnityEngine.Random.value * 1000) % cD.Count);
-            //すでにListに代入済みか確認
-            foreach (leads ls_tmp in ls)
-            {
-                if (ls_tmp.cardDataIndex == card_tmp)
-                {
-                    tmp_count++;
-                }
-            }
-            //List内に同じカードが２つあったら再抽選
-            if (tmp_count < 2)
-            {
-                //lsに追加
-                ls_add.cardDataIndex = card_tmp;
-                ls_add.isFront = false;
-                ls.Add(ls_add);
-            }
-            else
-            {
-                //再抽選
-                i--;
-            }
-        }
 
+        }
         
+            
+        
+        Debug.Log("loop" + loop);
+
+
+
     }
         void Start()
     {
         generate_leads();
-        foreach (leads leads_tmp in ls)
-        {
-            int i = 0;
-            Debug.Log("index : "+i+"cardData : "+ leads_tmp.cardDataIndex + "Role : "+ cD[leads_tmp.cardDataIndex].attribute);
-            i++;
-        }
-        //Debug.Log("ls : " + ls.Count + "cD : " + cD.Count);
+        
+        Debug.Log("ls : " + ls.Count + "cD : " + cD.Count);
     }
 
     void Timer()
