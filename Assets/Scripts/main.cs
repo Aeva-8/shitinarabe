@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine;
+using TMPro;
+using System;
 
 [System.Serializable]
 public class RoomInfo
@@ -24,45 +26,196 @@ public class playerData
 [System.Serializable]
 public class leads
 {
-    int attribute;
-    int villagerId;
-    int cardStatus;
-    bool isFront;
+    public int cardDataIndex;
+    public  bool isFront;
 }
-
-public class main : MonoBehaviour
-
-    
+[System.Serializable]
+public class cardData
+    {
+    public int attribute;
+    public int villagerId;
+    }
+public class main : MonoBehaviour   
 {
-    protected virtual void CheckTouch()
+    public TextMeshProUGUI Timer_Text;
+    public GameObject Field;
+    RoomInfo roominfo;
+    List<leads> ls = new List<leads>();
+    List<cardData> cD = new List<cardData>();
+    List<int> Selected_Card = new List<int>();
+    //Selected_Cardはターンごとに-1で初期化
+    int select_tmp=-1;
+    float time_count = 10;
+    GameObject CheckTouch()
     {
         PointerEventData pointer = new PointerEventData(EventSystem.current);
-
-        if (Input.touchCount <= 0)
+        if (Input.GetMouseButtonDown(0))
         {
-            return;
-        }
-        Touch touch = Input.GetTouch(0);
-        if (touch.phase == TouchPhase.Began)
-        {
-            pointer.position = touch.position;
+            //mouseクリック
+            pointer.position = Input.mousePosition;
             List<RaycastResult> result = new List<RaycastResult>();
             EventSystem.current.RaycastAll(pointer, result);
             foreach (RaycastResult raycastResult in result)
             {
-                Debug.Log(raycastResult.gameObject.name);
+                //Debug.Log(raycastResult.gameObject.name);
+                return raycastResult.gameObject;
             }
         }
+        else if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                pointer.position = touch.position;
+                List<RaycastResult> result = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointer, result);
+                foreach (RaycastResult raycastResult in result)
+                {
+                    //Debug.Log(raycastResult.gameObject.name);
+                    return raycastResult.gameObject;
+                }
+            }
+        }
+        
+        return null;
     }
-
-        void Start()
+    void villager_turn()
     {
+        GameObject obj = CheckTouch();
+        if (obj != null)
+        {
+            //オブジェクトをタッチしていた時
+            if (obj.transform.parent.gameObject == Field)
+            {
+                Debug.Log("Field");
+                //取得したオブジェクトがフィールド上にある時
+                select_tmp = int.Parse(obj.name);
+                Debug.Log(select_tmp + "仮選択中");
+            }
+            else if (obj.name == "Enter")
+            {
+                Debug.Log("Enter");
+                //めくるボタン選択時
+                if (Selected_Card.Count < 1)
+                {
+                    Selected_Card.Add(select_tmp);
+                    select_tmp = -1;
+                    int j = 1;
+                    foreach (int i in Selected_Card)
+                    {
+                        Debug.Log(j + "枚目　：　" + i);
+                        j++;
+                    }
+                }
+            }
+        }
+        if (Timer_Text.text == "0")
+        {
+            int add_count = 0;
+            //制限時間経過
+            if (Selected_Card.Count == 0)
+            {
+                //0枚選択
+                add_count = 2;
+            }
+            else if (Selected_Card.Count == 1)
+            {
+                if (select_tmp == -1)
+                {
+                    //1枚のみ選択
+                    add_count = 1;
+                }
+                else
+                {
+                    Selected_Card.Add(select_tmp);
+                }
+            }
+            
+            //選択していない回数ランダムに選ぶ
+            for (int i = 0; i < add_count; i++)
+            {
+                Selected_Card.Add(Convert.ToInt32((UnityEngine.Random.value * 1000) % 16));
+            }
+            //Debug.Log("Count" + Selected_Card.Count);
+            Debug.Log("１枚目は" + Selected_Card[0] + "二枚目は" + Selected_Card[1]);
+            
+        }
+    }
+    void generate_leads()
+    {
+        cardData cd_tmp = new cardData();
+        for (int i = 0; i < 8; i++)
+        {
+            //cardDataListのインスタンス生成
+            if (i < 5)
+            {
+                cd_tmp.attribute = 0;
+                cd_tmp.villagerId = i;
+            }
+            if (i < 8)
+            {
+                //この辺は村人の人数によって決まる。
+                cd_tmp.attribute = i-4+1;
+                cd_tmp.villagerId = -1;
+            }
+            cD.Add(cd_tmp);
+        }
+        leads ls_add = new leads();
+        int tmp_count = 0;
+        int card_tmp = 0;
+        for (int i = 0; i < cD.Count*2; i++)
+        {
+            card_tmp = Convert.ToInt32((UnityEngine.Random.value * 1000) % cD.Count);
+            //すでにListに代入済みか確認
+            foreach (leads ls_tmp in ls)
+            {
+                if (ls_tmp.cardDataIndex == card_tmp)
+                {
+                    tmp_count++;
+                }
+            }
+            //List内に同じカードが２つあったら再抽選
+            if (tmp_count < 2)
+            {
+                //lsに追加
+                ls_add.cardDataIndex = card_tmp;
+                ls_add.isFront = false;
+                ls.Add(ls_add);
+            }
+            else
+            {
+                //再抽選
+                i--;
+            }
+        }
+
         
     }
+        void Start()
+    {
+        generate_leads();
+        foreach (leads leads_tmp in ls)
+        {
+            int i = 0;
+            Debug.Log("index : "+i+"cardData : "+ leads_tmp.cardDataIndex + "Role : "+ cD[leads_tmp.cardDataIndex].attribute);
+            i++;
+        }
+        //Debug.Log("ls : " + ls.Count + "cD : " + cD.Count);
+    }
 
-
+    void Timer()
+    {
+        time_count -= Time.deltaTime;
+        if (time_count < 0)
+        {
+            time_count = 0;
+        }
+        Timer_Text.text = Convert.ToInt32(time_count).ToString();
+    }
     void Update()
     {
-        CheckTouch();
+        Timer();
+        villager_turn();
+        
     }
 }
