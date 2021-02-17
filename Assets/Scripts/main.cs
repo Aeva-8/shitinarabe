@@ -1,210 +1,91 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.EventSystems;
-using UnityEngine;
-using TMPro;
-using System;
 using System.Linq;
+using UnityEngine;
 
-[System.Serializable]
-public class RoomInfo
+public class GameData
 {
-    int roomId;
-    int gameStatus;
-    int partStatus;
-    int turnStatus;
-    int playerLimit;
-    List<playerData> parts = new List<playerData>();
-    List<Leads> leads = new List<Leads>();
+    public static int RoomId;
+    public static int GameStatus;
+    public static int PlayerLimit=4;
+    public static List<List<int>> PlayerHand =new List<List<int>>();
+    public static List<List<int>> Field = new List<List<int>>();
 
-}
-[System.Serializable]
-public class playerData
-{
-    string name;
-    bool madness;
-}
-[System.Serializable]
-public class Leads
-{
-    public int CardDataIndex;
-    public  bool isFront;
-}
-[System.Serializable]
-public class CardData
+    public static int GetPlayerLimit()
     {
-    public int attribute;
-    public int villagerId;
+        return PlayerLimit;
     }
-public class main : MonoBehaviour   
-{
-    public TextMeshProUGUI Timer_Text;
-    public GameObject Field;
-    RoomInfo roominfo;
-    List<Leads> leads = new List<Leads>();
-    List<CardData> carddata = new List<CardData>();
-    List<int> Selected_Card = new List<int>();
-    //Selected_Cardはターンごとに-1で初期化
-    int select_tmp=-1;
-    float time_count = 10;
-    GameObject CheckTouch()
+    public static List<List<int>> Field_value
     {
-        PointerEventData pointer = new PointerEventData(EventSystem.current);
-        if (Input.GetMouseButtonDown(0))
+        get
         {
-            //mouseクリック
-            pointer.position = Input.mousePosition;
-            List<RaycastResult> result = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(pointer, result);
-            foreach (RaycastResult raycastResult in result)
-            {
-                //Debug.Log(raycastResult.gameObject.name);
-                return raycastResult.gameObject;
-            }
+            return Field;
         }
-        else if (Input.touchCount > 0)
+        set
         {
-            Touch touch = Input.GetTouch(0);
-            if (touch.phase == TouchPhase.Began)
-            {
-                pointer.position = touch.position;
-                List<RaycastResult> result = new List<RaycastResult>();
-                EventSystem.current.RaycastAll(pointer, result);
-                foreach (RaycastResult raycastResult in result)
-                {
-                    //Debug.Log(raycastResult.gameObject.name);
-                    return raycastResult.gameObject;
-                }
-            }
+            Field = value;
         }
-        
-        return null;
+
     }
-    void villager_turn()
+    
+}
+
+public class main : MonoBehaviour
+{
+    List<int> Shuffle(List<int> list)
     {
-        GameObject obj = CheckTouch();
-        if (obj != null)
+        return list = list.OrderBy(i => Guid.NewGuid()).ToList();
+    }
+    void Generate_Card()
+    {
+        List<int> yama = new List<int>();
+        for (int i = 0; i < 52; i++)
         {
-            //オブジェクトをタッチしていた時
-            if (obj.transform.parent.gameObject == Field)
-            {
-                Debug.Log("Field");
-                //取得したオブジェクトがフィールド上にある時
-                select_tmp = int.Parse(obj.name);
-                Debug.Log(select_tmp + "仮選択中");
-            }
-            else if (obj.name == "Enter")
-            {
-                Debug.Log("Enter");
-                //めくるボタン選択時
-                if (Selected_Card.Count < 1)
-                {
-                    Selected_Card.Add(select_tmp);
-                    select_tmp = -1;
-                    int j = 1;
-                    foreach (int i in Selected_Card)
-                    {
-                        Debug.Log(j + "枚目　：　" + i);
-                        j++;
-                    }
-                }
-            }
+            yama.Add(i);
         }
-        if (Timer_Text.text == "0")
+        yama = Shuffle(yama);
+        for (int i = 0; i < GameData.GetPlayerLimit(); i++)
         {
-            int add_count = 0;
-            //制限時間経過
-            if (Selected_Card.Count == 0)
+            List<int> player = new List<int>();
+            GameData.PlayerHand.Add(player);
+        }
+        int player_tmp = 0;
+        foreach (int i in yama)
+        {
+            GameData.PlayerHand[player_tmp].Add(i);
+            player_tmp++;
+            if (player_tmp == GameData.GetPlayerLimit())
             {
-                //0枚選択
-                add_count = 2;
+                player_tmp = 0;
             }
-            else if (Selected_Card.Count == 1)
-            {
-                if (select_tmp == -1)
-                {
-                    //1枚のみ選択
-                    add_count = 1;
-                }
-                else
-                {
-                    Selected_Card.Add(select_tmp);
-                }
-            }
-            
-            //選択していない回数ランダムに選ぶ
-            for (int i = 0; i < add_count; i++)
-            {
-                Selected_Card.Add(Convert.ToInt32((UnityEngine.Random.value * 1000) % 16));
-            }
-            //Debug.Log("Count" + Selected_Card.Count);
-            Debug.Log("１枚目は" + Selected_Card[0] + "二枚目は" + Selected_Card[1]);
             
         }
     }
-    void generate_Leads()
+
+    void Generate_Hand()
     {
-        List<int> cardnum_tmp = new List<int>();
-        CardData carddata_tmp = new CardData();
-        for (int i = 0; i < 8; i++)
-        {
-            Leads leads_tmp = new Leads();
-            //CardDataListのインスタンス生成
-            if (i < 5)
-            {
-                carddata_tmp.attribute = 0;
-                carddata_tmp.villagerId = i;
-                leads_tmp.CardDataIndex = i;
-                leads_tmp.isFront = false;
-                leads.Add(leads_tmp);
-                leads.Add(leads_tmp);
-
-            }
-            else if (i < 8)
-            {
-                //この辺は村人の人数によって決まる。
-                carddata_tmp.attribute = i-4+1;
-                leads_tmp.CardDataIndex = i;
-                leads_tmp.isFront = false;
-                leads.Add(leads_tmp);
-                leads.Add(leads_tmp);
-                carddata_tmp.villagerId = -1;
-            }
-            carddata.Add(carddata_tmp);
-            //Debug.Log(i);
-        }
-        leads = leads.OrderBy(i => Guid.NewGuid()).ToList();
-        for (int i = 0; i < leads.Count; i++)
-        {
-            Debug.Log("num i :" + i + "  leads" + leads[i].CardDataIndex);
-        }
-
-
-
-
-
 
     }
-        void Start()
+    // Start is called before the first frame update
+    void Start()
     {
-        generate_Leads();
+        Generate_Card();
+        Debug.Log(GameData.GetPlayerLimit());
+        for (int i = 0; i < GameData.GetPlayerLimit(); i++)
+        {
+            Debug.Log("player" + i);
+            foreach (int j in GameData.PlayerHand[i])
+            {
+                Debug.Log(j);
+            }
+        }
         
-        Debug.Log("leads : " + leads.Count + "carddata : " + carddata.Count);
     }
 
-    void Timer()
-    {
-        time_count -= Time.deltaTime;
-        if (time_count < 0)
-        {
-            time_count = 0;
-        }
-        Timer_Text.text = Convert.ToInt32(time_count).ToString();
-    }
+    // Update is called once per frame
     void Update()
     {
-        Timer();
-        villager_turn();
         
     }
 }
