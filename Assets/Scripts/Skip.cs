@@ -17,7 +17,11 @@ public class Skip : MonoBehaviour
     }
     public void OnClick()
     {
-        GameData.Player_state[GameData.Turn]++;
-        main.Turn_State = 0;
+        if (main.Turn_State == 1)
+        {
+            GameData.Player_state[GameData.Turn]++;
+            main.Turn_State = 2;
+        }
+        
     }
 }

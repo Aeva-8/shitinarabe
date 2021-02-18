@@ -8,15 +8,19 @@ public class Card_movement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public Transform Field;
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Field = transform.parent;
-        if (Field.name != "Footer")
+        if (main.Turn_State == 1)
         {
-            return;
+            Field = transform.parent;
+            if (Field.name != "Footer")
+            {
+                return;
+            }
+            transform.SetParent(Field.parent, false);
+            GetComponent<CanvasGroup>().blocksRaycasts = false;
+            //Canvas canvas = this.GetComponent<Canvas>();
+            //canvas.overrideSorting = true;
         }
-        transform.SetParent(Field.parent, false);
-        GetComponent<CanvasGroup>().blocksRaycasts = false;
-        //Canvas canvas = this.GetComponent<Canvas>();
-        //canvas.overrideSorting = true;
+
     }
 
     public void OnDrag(PointerEventData eventData)

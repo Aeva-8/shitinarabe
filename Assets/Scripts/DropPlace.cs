@@ -18,34 +18,39 @@ public class DropPlace : MonoBehaviour, IDropHandler
             int card_num = int.Parse(card.name);
             if (Check(card_num, int.Parse(this.name)))
             {
-                GameObject chil_tmp;
-                if (card_num % 13 > 6)
-                {
-                    //7以上
-                    chil_tmp = this.transform.Find("after_7").gameObject.transform.FindChild(card_num.ToString()).gameObject;
-                    //card.Field = chil_tmp.transform;
-                }
-                else
-                {
-                    chil_tmp = this.transform.Find("before_7").gameObject.transform.FindChild(card_num.ToString()).gameObject;
-                    //card.Field = chil_tmp.transform;
-                }
-                Image image = chil_tmp.GetComponent<Image>();
-                image.color = new Color(image.color.r, image.color.g, image.color.b, 255);
-                TextMeshProUGUI card_txt = chil_tmp.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
-                card_txt.color = new Color(image.color.r, image.color.g, image.color.b, 255);
+                DropField(card_num, this.gameObject);
+                //Destroy(card);
                 //Playerhandからカードデータを消去し、Fieldにカードデータを追加する
                 //Turn_stateを0にする
                 GameData.PlayerHand[GameData.Turn].Remove(card_num);
                 GameData.Field[int.Parse(this.name)].Add(card_num);
-                main.Turn_State = 0;
-
+                main.Turn_State = 2;
             }
-
+            
 
         }
     }
-    bool Check(int card_num ,int sort)
+    public void DropField(int card_num,GameObject obj)
+    {
+        GameObject chil_tmp;
+        if (card_num % 13 > 6)
+        {
+            //7以上
+            chil_tmp = obj.transform.Find("after_7").gameObject.transform.Find(card_num.ToString()).gameObject;
+            //card.Field = chil_tmp.transform;
+        }
+        else
+        {
+            chil_tmp = obj.transform.Find("before_7").gameObject.transform.Find(card_num.ToString()).gameObject;
+            //card.Field = chil_tmp.transform;
+        }
+        
+        Image image = chil_tmp.GetComponent<Image>();
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 255);
+        TextMeshProUGUI card_txt = chil_tmp.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
+        card_txt.color = new Color(image.color.r, image.color.g, image.color.b, 255);
+    }
+    public bool Check(int card_num ,int sort)
     {
         
         if ( sort== card_num / 13)
